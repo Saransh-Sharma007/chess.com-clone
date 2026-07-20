@@ -1,0 +1,1430 @@
+/**
+ * Antigravity Chess - Core Application Logic
+ * Powered by Chess.js for rule validation
+ */
+
+// --- 1. PIECE SVG DEFINITIONS (Chess.com Classic Style) ---
+// High-fidelity inline SVGs for rendering chess pieces.
+const PIECE_SVGS = {
+    // White Pieces
+    wp: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-.83.62-1.41 1.61-1.41 2.72 0 2.21 4.29 4 8 4s8-1.79 8-4c0-1.11-.58-2.1-1.41-2.72C35.06 24.84 36 23.03 36 21c0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    wn: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M 22,10 C 22,10 19,11 16,15 C 13,19 13,23 13,23 C 13,23 14,20 18,20 C 18,20 17,21 15,24 C 13,27 13,30 13,30 C 13,30 14,28 18,28 C 19,28 20,29 20,29 C 20,29 18,31 15,31 C 12,31 10,34 10,34 C 10,34 13,34 16,33 C 19,32 24,31 27,29 C 30,27 31,25 32,22 C 33,19 33,14 33,14 C 33,14 30,11 27,10 C 24,9 22,10 22,10 z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5 25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" transform="matrix(0.861785,0.507278,-0.507278,0.861785,27.4244,-2.2597)" fill="#000"/>
+        <path d="M 20,24 A 1.5 1.5 0 1 1 17,24 A 1.5 1.5 0 1 1 20,24 z" transform="matrix(0.861785,0.507278,-0.507278,0.861785,24.4244,-2.2597)" fill="#000"/>
+    </svg>`,
+    wb: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M9 36c3.39 0 7.66-.69 11.77-2.3 4 1.51 8.32 2.25 12.46 2.25 5.54 0 9.27-1.39 9.27-1.39L42.5 33S38 31.5 38 28.5V17c0-5.25-4-9-9.25-9-1.37 0-2.72.25-3.9 1-.9-1.25-2.22-2-3.85-2-1.63 0-2.95.75-3.85 2-1.18-.75-2.53-1-3.9-1C8 8 4 11.75 4 17v11.5c0 3 4.5 4.5 4.5 4.5L8.5 34.61s3.73 1.39 9.27 1.39z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="22.5" cy="5" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+        <path d="M22.5 10v21M17.5 18h10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    wr: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M9 39h27v-3H9v3zm3-13v7h21v-7H12zm2.5-11h16l1.5 8h-19l1.5-8zM12 9v4h4V9h-4zm8 0v4h5V9h-5zm9 0v4h4V9h-4z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 13h17v3H14v-3z" fill="#fff" stroke="#000" stroke-width="1.5"/>
+    </svg>`,
+    wq: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14.5-4a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14.5 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM9 37h27v-3H9v3zm3-11.5L6 18l7 14h24l7-14-6 7.5L28.5 14l-6 10-6-10L12 25.5z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="6" cy="12" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+        <circle cx="39" cy="12" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+        <circle cx="12" cy="7.5" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+        <circle cx="33" cy="7.5" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+        <circle cx="22.5" cy="5" r="2" fill="#fff" stroke="#000" stroke-width="1.5"/>
+    </svg>`,
+    wk: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M22.5 11.63V6M20 8h5M22.5 25C18 21 16 19.5 16 16.5c0-3.3 2.7-6 6-6s6 2.7 6 6c0 3-2 4.5-6.5 8.5z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M11.5 30C15 33 20 34 22.5 34s7.5-1 11-4c3.25-2.75 3.5-7.5 3.5-7.5H8s.25 4.75 3.5 7.5z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11.5 30c3.5-3 7.5-3 11-3s7.5 0 11 3" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M12 36h21v-3H12v3zm0-9h21v-2H12v2z" fill="#fff" stroke="#000" stroke-width="1.5"/>
+    </svg>`,
+
+    // Black Pieces
+    bp: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-.83.62-1.41 1.61-1.41 2.72 0 2.21 4.29 4 8 4s8-1.79 8-4c0-1.11-.58-2.1-1.41-2.72C35.06 24.84 36 23.03 36 21c0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    bn: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M 22,10 C 22,10 19,11 16,15 C 13,19 13,23 13,23 C 13,23 14,20 18,20 C 18,20 17,21 15,24 C 13,27 13,30 13,30 C 13,30 14,28 18,28 C 19,28 20,29 20,29 C 20,29 18,31 15,31 C 12,31 10,34 10,34 C 10,34 13,34 16,33 C 19,32 24,31 27,29 C 30,27 31,25 32,22 C 33,19 33,14 33,14 C 33,14 30,11 27,10 C 24,9 22,10 22,10 z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 9.5 25.5 A 0.5 0.5 0 1 1 8.5 25.5 A 0.5 0.5 0 1 1 9.5 25.5 z" transform="matrix(0.861785,0.507278,-0.507278,0.861785,27.4244,-2.2597)" fill="#fff"/>
+        <path d="M 20,24 A 1.5 1.5 0 1 1 17,24 A 1.5 1.5 0 1 1 20,24 z" transform="matrix(0.861785,0.507278,-0.507278,0.861785,24.4244,-2.2597)" fill="#fff"/>
+    </svg>`,
+    bb: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M9 36c3.39 0 7.66-.69 11.77-2.3 4 1.51 8.32 2.25 12.46 2.25 5.54 0 9.27-1.39 9.27-1.39L42.5 33S38 31.5 38 28.5V17c0-5.25-4-9-9.25-9-1.37 0-2.72.25-3.9 1-.9-1.25-2.22-2-3.85-2-1.63 0-2.95.75-3.85 2-1.18-.75-2.53-1-3.9-1C8 8 4 11.75 4 17v11.5c0 3 4.5 4.5 4.5 4.5L8.5 34.61s3.73 1.39 9.27 1.39z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="22.5" cy="5" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+        <path d="M22.5 10v21M17.5 18h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    br: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M9 39h27v-3H9v3zm3-13v7h21v-7H12zm2.5-11h16l1.5 8h-19l1.5-8zM12 9v4h4V9h-4zm8 0v4h5V9h-5zm9 0v4h4V9h-4z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 13h17v3H14v-3z" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+    </svg>`,
+    bq: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M8 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14.5-4a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14.5 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM9 37h27v-3H9v3zm3-11.5L6 18l7 14h24l7-14-6 7.5L28.5 14l-6 10-6-10L12 25.5z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="6" cy="12" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="39" cy="12" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="12" cy="7.5" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="33" cy="7.5" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="22.5" cy="5" r="2" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+    </svg>`,
+    bk: `<svg viewBox="0 0 45 45" width="100%" height="100%">
+        <path d="M22.5 11.63V6M20 8h5M22.5 25C18 21 16 19.5 16 16.5c0-3.3 2.7-6 6-6s6 2.7 6 6c0 3-2 4.5-6.5 8.5z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M11.5 30C15 33 20 34 22.5 34s7.5-1 11-4c3.25-2.75 3.5-7.5 3.5-7.5H8s.25 4.75 3.5 7.5z" fill="#454545" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11.5 30c3.5-3 7.5-3 11-3s7.5 0 11 3" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M12 36h21v-3H12v3zm0-9h21v-2H12v2z" fill="#454545" stroke="#fff" stroke-width="1.5"/>
+    </svg>`
+};
+
+// --- 2. AUDIO SYNTHESIZER MODULE ---
+// HTML5 Web Audio API to play lag-free, custom chess sounds
+const ChessAudio = {
+    ctx: null,
+
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+
+    playMove() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    },
+
+    playCapture() {
+        this.init();
+        // Play a crisp snap noise burst
+        const bufferSize = this.ctx.sampleRate * 0.05; // 50ms of noise
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noiseNode = this.ctx.createBufferSource();
+        noiseNode.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+        noiseNode.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        noiseNode.start();
+        noiseNode.stop(this.ctx.currentTime + 0.06);
+
+        // Add a small wood strike undertone
+        const osc = this.ctx.createOscillator();
+        const oscGain = this.ctx.createGain();
+        osc.connect(oscGain);
+        oscGain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.05);
+        oscGain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.07);
+    },
+
+    playCheck() {
+        this.init();
+        const t = this.ctx.currentTime;
+        // Playing two bells in harmonic intervals (C5 - G5)
+        const notes = [523.25, 783.99]; 
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            
+            gain.gain.setValueAtTime(0.2, t + idx * 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.04 + 0.3);
+            
+            osc.start(t + idx * 0.04);
+            osc.stop(t + idx * 0.04 + 0.35);
+        });
+    },
+
+    playGameOver(win) {
+        this.init();
+        const t = this.ctx.currentTime;
+        const root = win === 'win' ? 261.63 : win === 'loss' ? 196.00 : 220.00; // C4 for win, G3 for loss, A3 for draw
+        
+        let arpeggio = [];
+        if (win === 'win') {
+            arpeggio = [root, root * 1.25, root * 1.5, root * 2.0]; // Major chord C-E-G-C
+        } else if (win === 'loss') {
+            arpeggio = [root, root * 1.2, root * 1.5, root * 0.8]; // Minor chord with falling ending
+        } else {
+            arpeggio = [root, root, root * 1.12, root]; // Mild monotone draw arpeggio
+        }
+
+        arpeggio.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.type = win === 'win' ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.12);
+            
+            gain.gain.setValueAtTime(0.15, t + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.12 + 0.4);
+
+            osc.start(t + idx * 0.12);
+            osc.stop(t + idx * 0.12 + 0.45);
+        });
+    }
+};
+
+// --- 3. STATE VARIABLES ---
+let game = null;
+let boardFlipped = false;
+let gameInProgress = false;
+let playerColor = 'w'; // White by default
+let timeControlMinutes = 5; // default 5m Blitz
+let selectedSquare = null;
+let legalMovesForSelected = [];
+let pendingPromotion = null; // Stored promotion intent: { from, to }
+
+// User Stats & Rating (persistent storage)
+let userRating = 0;
+let userStats = {
+    played: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    peak: 0
+};
+
+// Active Opponent Bot Profile
+const BOTS = {
+    martin: { id: 'martin', name: 'Martin', rating: 100, difficulty: 'easy' },
+    elara: { id: 'elara', name: 'Elara', rating: 500, difficulty: 'medium' },
+    magnus: { id: 'magnus', name: 'Magnus Bot', rating: 1000, difficulty: 'hard' }
+};
+let activeBot = BOTS.martin;
+
+// Game Clock parameters
+let whiteTimeSec = 300;
+let blackTimeSec = 300;
+let clockInterval = null;
+let activeClock = null; // 'w' or 'b'
+let lastTickTime = null;
+
+// Captured pieces arrays
+let capturedPieces = {
+    w: [],
+    b: []
+};
+
+// UI Elements caching
+const DOM = {
+    board: document.getElementById('chess-board'),
+    startGameBtn: document.getElementById('start-game-btn'),
+    flipBoardBtn: document.getElementById('flip-board-btn'),
+    resignBtn: document.getElementById('resign-btn'),
+    drawBtn: document.getElementById('draw-btn'),
+    opponentName: document.getElementById('opponent-name'),
+    opponentRating: document.getElementById('opponent-rating-badge'),
+    userName: document.getElementById('user-name'),
+    userRating: document.getElementById('user-rating-badge'),
+    opponentTimer: document.getElementById('opponent-timer'),
+    userTimer: document.getElementById('user-timer'),
+    gameStatusText: document.getElementById('game-status-text'),
+    moveCount: document.getElementById('move-count'),
+    moveHistoryTable: document.getElementById('move-history-tbody'),
+    userCaptures: document.getElementById('user-captures'),
+    opponentCaptures: document.getElementById('opponent-captures'),
+    // Modals
+    promotionOverlay: document.getElementById('promotion-overlay'),
+    gameOverOverlay: document.getElementById('gameover-overlay'),
+    gameOverTitle: document.getElementById('gameover-title'),
+    gameOverReason: document.getElementById('gameover-reason'),
+    gameOverBanner: document.getElementById('gameover-banner'),
+    oldRating: document.getElementById('gameover-old-rating'),
+    newRating: document.getElementById('gameover-new-rating'),
+    changeVal: document.getElementById('gameover-change-val'),
+    changeArrow: document.getElementById('gameover-change-arrow'),
+    gameOverBotName: document.getElementById('gameover-bot-name'),
+    gameOverBotRating: document.getElementById('gameover-bot-rating'),
+    gameOverCloseBtn: document.getElementById('gameover-close-btn'),
+    // Stats Tab
+    statsRating: document.getElementById('stats-rating'),
+    statsPlayed: document.getElementById('stats-played'),
+    statsWins: document.getElementById('stats-wins'),
+    statsLosses: document.getElementById('stats-losses'),
+    statsDraws: document.getElementById('stats-draws'),
+    statsPeak: document.getElementById('stats-peak'),
+    resetStatsBtn: document.getElementById('reset-stats-btn'),
+    // Panels
+    opponentPanel: document.getElementById('opponent-panel'),
+    userPanel: document.getElementById('user-panel')
+};
+
+// --- 4. ELO RATING SYSTEM ---
+const ELO = {
+    load() {
+        const storedRating = localStorage.getItem('antigravity_chess_rating');
+        if (storedRating !== null) {
+            userRating = parseInt(storedRating, 10);
+        } else {
+            userRating = 0;
+            localStorage.setItem('antigravity_chess_rating', '0');
+        }
+
+        const storedStats = localStorage.getItem('antigravity_chess_stats');
+        if (storedStats !== null) {
+            userStats = JSON.parse(storedStats);
+        } else {
+            userStats = { played: 0, wins: 0, losses: 0, draws: 0, peak: 0 };
+            this.saveStats();
+        }
+        this.updateUI();
+    },
+
+    saveRating(rating) {
+        userRating = rating;
+        localStorage.setItem('antigravity_chess_rating', rating.toString());
+        if (rating > userStats.peak) {
+            userStats.peak = rating;
+            this.saveStats();
+        }
+        this.updateUI();
+    },
+
+    saveStats() {
+        localStorage.setItem('antigravity_chess_stats', JSON.stringify(userStats));
+        this.updateUI();
+    },
+
+    reset() {
+        userRating = 0;
+        userStats = { played: 0, wins: 0, losses: 0, draws: 0, peak: 0 };
+        localStorage.setItem('antigravity_chess_rating', '0');
+        this.saveStats();
+    },
+
+    updateUI() {
+        DOM.userRating.textContent = userRating;
+        DOM.statsRating.textContent = userRating;
+        DOM.statsPlayed.textContent = userStats.played;
+        DOM.statsWins.textContent = userStats.wins;
+        DOM.statsLosses.textContent = userStats.losses;
+        DOM.statsDraws.textContent = userStats.draws;
+        DOM.statsPeak.textContent = userStats.peak;
+    },
+
+    calculateChange(botRating, score) {
+        // Elo update formula: newRating = oldRating + K * (score - expectedScore)
+        const K = 32;
+        const expectedScore = 1 / (1 + Math.pow(10, (botRating - userRating) / 400));
+        const ratingChange = K * (score - expectedScore);
+        
+        const oldVal = userRating;
+        const newVal = Math.max(0, Math.round(oldVal + ratingChange));
+        
+        return {
+            old: oldVal,
+            new: newVal,
+            diff: newVal - oldVal
+        };
+    }
+};
+
+// --- 5. CHESS BOARD RENDERER ---
+const BoardRenderer = {
+    files: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+    ranks: [8, 7, 6, 5, 4, 3, 2, 1],
+
+    render() {
+        DOM.board.innerHTML = '';
+        
+        const currentRanks = boardFlipped ? [...this.ranks].reverse() : this.ranks;
+        const currentFiles = boardFlipped ? [...this.files].reverse() : this.files;
+
+        // Fetch check state to highlight king in check
+        let checkSquare = null;
+        if (game && game.in_check()) {
+            // Find current turn's king location
+            const turn = game.turn();
+            // Iterate over all squares to find the king
+            for (let r = 0; r < 8; r++) {
+                for (let f = 0; f < 8; f++) {
+                    const sqName = this.files[f] + this.ranks[r];
+                    const piece = game.get(sqName);
+                    if (piece && piece.type === 'k' && piece.color === turn) {
+                        checkSquare = sqName;
+                        break;
+                    }
+                }
+                if (checkSquare) break;
+            }
+        }
+
+        // Fetch last move from game PGN if available to add highlight
+        let lastMoveFrom = null;
+        let lastMoveTo = null;
+        if (game) {
+            const history = game.history({ verbose: true });
+            if (history.length > 0) {
+                const last = history[history.length - 1];
+                lastMoveFrom = last.from;
+                lastMoveTo = last.to;
+            }
+        }
+
+        for (let r = 0; r < 8; r++) {
+            for (let f = 0; f < 8; f++) {
+                const rank = currentRanks[r];
+                const file = currentFiles[f];
+                const squareName = file + rank;
+                
+                const squareDiv = document.createElement('div');
+                const isLight = (r + f) % 2 === 0;
+                squareDiv.className = `square ${isLight ? 'light' : 'dark'}`;
+                squareDiv.dataset.square = squareName;
+
+                // Add Highlight Classes
+                if (squareName === selectedSquare) {
+                    squareDiv.classList.add('selected');
+                }
+                if (squareName === lastMoveFrom || squareName === lastMoveTo) {
+                    squareDiv.classList.add('last-move');
+                }
+                if (squareName === checkSquare) {
+                    squareDiv.classList.add('in-check');
+                }
+
+                // Append Coordinates labels inside squares (Chess.com premium style)
+                // We draw numbers on the leftmost file of the screen, and letters on the bottom-most rank
+                const isLeftColumn = f === 0;
+                const isBottomRow = r === 7;
+
+                if (isLeftColumn) {
+                    const rankLabel = document.createElement('span');
+                    rankLabel.className = 'coord rank-coord';
+                    rankLabel.textContent = rank;
+                    squareDiv.appendChild(rankLabel);
+                }
+
+                if (isBottomRow) {
+                    const fileLabel = document.createElement('span');
+                    fileLabel.className = 'coord file-coord';
+                    fileLabel.textContent = file;
+                    squareDiv.appendChild(fileLabel);
+                }
+
+                // If game running, draw piece on the square
+                if (game) {
+                    const piece = game.get(squareName);
+                    if (piece) {
+                        const pieceCode = piece.color + piece.type; // e.g. "wp", "bn"
+                        const pieceImg = document.createElement('div');
+                        pieceImg.className = 'piece';
+                        pieceImg.dataset.piece = pieceCode;
+                        pieceImg.dataset.square = squareName;
+                        pieceImg.innerHTML = PIECE_SVGS[pieceCode];
+                        
+                        // Drag & Drop event bindings
+                        if (gameInProgress && piece.color === playerColor) {
+                            pieceImg.setAttribute('draggable', 'true');
+                            pieceImg.addEventListener('dragstart', handleDragStart);
+                            pieceImg.addEventListener('dragend', handleDragEnd);
+                        }
+
+                        // Stop normal drag actions on images inside SVG
+                        pieceImg.addEventListener('dragstart', (e) => {
+                            if (piece.color !== playerColor || !gameInProgress) {
+                                e.preventDefault();
+                            }
+                        });
+
+                        squareDiv.appendChild(pieceImg);
+                    }
+                }
+
+                // If legal move indicators should be drawn
+                if (legalMovesForSelected.includes(squareName)) {
+                    const dotContainer = document.createElement('div');
+                    dotContainer.className = 'legal-dot-container';
+                    
+                    const isCapture = game.get(squareName) !== null;
+                    const indicator = document.createElement('div');
+                    indicator.className = isCapture ? 'legal-capture' : 'legal-dot';
+                    
+                    dotContainer.appendChild(indicator);
+                    squareDiv.appendChild(dotContainer);
+                }
+
+                // Square Drag & Drop Overlays
+                if (gameInProgress) {
+                    squareDiv.addEventListener('dragover', handleDragOver);
+                    squareDiv.addEventListener('dragleave', handleDragLeave);
+                    squareDiv.addEventListener('drop', handleDrop);
+                    squareDiv.addEventListener('click', handleSquareClick);
+                }
+
+                DOM.board.appendChild(squareDiv);
+            }
+        }
+    }
+};
+
+// --- 6. DRAG AND DROP & SELECTION INTERACTIVITY ---
+let draggedPiece = null;
+
+function handleDragStart(e) {
+    if (!gameInProgress) return;
+    draggedPiece = e.target;
+    const fromSquare = draggedPiece.dataset.square;
+    selectedSquare = fromSquare;
+    
+    // Highlight legal moves
+    const moves = game.moves({ square: fromSquare, verbose: true });
+    legalMovesForSelected = moves.map(m => m.to);
+
+    // Apply CSS class
+    draggedPiece.classList.add('dragging');
+    
+    // Update Board visually to render legal moves dots/captures
+    BoardRenderer.render();
+    
+    // Allow dragging details
+    e.dataTransfer.setData('text/plain', fromSquare);
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    if (draggedPiece) {
+        draggedPiece.classList.remove('dragging');
+    }
+    draggedPiece = null;
+    legalMovesForSelected = [];
+    BoardRenderer.render();
+}
+
+function handleDragOver(e) {
+    e.preventDefault(); // Required to allow drop
+    const square = e.currentTarget;
+    if (gameInProgress) {
+        square.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    const square = e.currentTarget;
+    square.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const square = e.currentTarget;
+    square.classList.remove('drag-over');
+
+    const fromSquare = e.dataTransfer.getData('text/plain');
+    const toSquare = square.dataset.square;
+
+    attemptMove(fromSquare, toSquare);
+}
+
+function handleSquareClick(e) {
+    if (!gameInProgress) return;
+    const squareName = e.currentTarget.dataset.square;
+    const piece = game.get(squareName);
+
+    if (selectedSquare === null) {
+        // First Click: select piece if friendly
+        if (piece && piece.color === playerColor) {
+            selectedSquare = squareName;
+            const moves = game.moves({ square: squareName, verbose: true });
+            legalMovesForSelected = moves.map(m => m.to);
+            BoardRenderer.render();
+        }
+    } else {
+        // Second Click
+        if (legalMovesForSelected.includes(squareName)) {
+            // Valid target move
+            attemptMove(selectedSquare, squareName);
+        } else if (piece && piece.color === playerColor) {
+            // Select another friendly piece instead
+            selectedSquare = squareName;
+            const moves = game.moves({ square: squareName, verbose: true });
+            legalMovesForSelected = moves.map(m => m.to);
+            BoardRenderer.render();
+        } else {
+            // Clear selection
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            BoardRenderer.render();
+        }
+    }
+}
+
+// --- 7. PAWN PROMOTION CONTROLLERS ---
+function attemptMove(from, to) {
+    // Check if the move is promotion (friendly pawn moving to end rank)
+    const piece = game.get(from);
+    const isPawn = piece && piece.type === 'p';
+    const isTargetRank = to.endsWith('8') || to.endsWith('1');
+    
+    if (isPawn && isTargetRank) {
+        // Verify if it's a legal move for promotion
+        const moves = game.moves({ square: from, verbose: true });
+        const isLegal = moves.some(m => m.to === to);
+        if (isLegal) {
+            // Trigger promotion modal popup
+            pendingPromotion = { from, to };
+            DOM.promotionOverlay.classList.add('active');
+            return;
+        }
+    }
+
+    // Execute normal move
+    executeMove(from, to);
+}
+
+function executeMove(from, to, promotion = null) {
+    const prevCapturedCount = countCapturedPieces(game);
+    
+    try {
+        const move = game.move({
+            from: from,
+            to: to,
+            promotion: promotion || undefined
+        });
+
+        if (move) {
+            // Switch timers instantly
+            activeClock = game.turn();
+            lastTickTime = Date.now();
+            
+            // Check capture vs standard move sounds
+            const nextCapturedCount = countCapturedPieces(game);
+            
+            // Render captured piece visual layout
+            updateCapturedList();
+
+            if (game.in_check()) {
+                ChessAudio.playCheck();
+            } else if (nextCapturedCount > prevCapturedCount) {
+                ChessAudio.playCapture();
+            } else {
+                ChessAudio.playMove();
+            }
+
+            // Sync log PGN
+            updateMoveHistory();
+
+            // Clear selections
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            BoardRenderer.render();
+
+            // Check game end states
+            if (checkGameEnd()) return;
+
+            // Trigger AI Bot move if it's the bot's turn
+            if (game.turn() !== playerColor) {
+                DOM.opponentPanel.classList.add('active-turn');
+                DOM.userPanel.classList.remove('active-turn');
+                
+                // Add minor thinking delay
+                const delay = 400 + Math.random() * 800; // 400ms - 1200ms
+                setTimeout(() => {
+                    if (gameInProgress && game.turn() !== playerColor) {
+                        makeBotMove();
+                    }
+                }, delay);
+            } else {
+                DOM.userPanel.classList.add('active-turn');
+                DOM.opponentPanel.classList.remove('active-turn');
+            }
+        }
+    } catch(err) {
+        console.error("Invalid move attempted", err);
+    }
+}
+
+// Support Promotion Choice Selection Click
+document.querySelectorAll('.promo-choice-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const pieceType = e.currentTarget.dataset.piece;
+        DOM.promotionOverlay.classList.remove('active');
+        if (pendingPromotion) {
+            executeMove(pendingPromotion.from, pendingPromotion.to, pieceType);
+            pendingPromotion = null;
+        }
+    });
+});
+
+// --- 8. AI ENGINE (Minimax & Piece-Square Evaluation) ---
+
+// Piece positional values for AI heuristics (oriented for Black piece calculations)
+const PawnPST = [
+    [0,  0,  0,  0,  0,  0,  0,  0],
+    [50, 50, 50, 50, 50, 50, 50, 50],
+    [10, 10, 20, 30, 30, 20, 10, 10],
+    [5,  5, 10, 25, 25, 10,  5,  5],
+    [0,  0,  0, 20, 20,  0,  0,  0],
+    [5, -5,-10,  0,  0,-10, -5,  5],
+    [5, 10, 10,-20,-20, 10, 10,  5],
+    [0,  0,  0,  0,  0,  0,  0,  0]
+];
+
+const KnightPST = [
+    [-50,-40,-30,-30,-30,-30,-40,-50],
+    [-40,-20,  0,  0,  0,  0,-20,-40],
+    [-30,  0, 10, 15, 15, 10,  0,-30],
+    [-30,  5, 15, 20, 20, 15,  5,-30],
+    [-30,  0, 15, 20, 20, 15,  0,-30],
+    [-30,  5, 10, 15, 15, 10,  5,-30],
+    [-40,-20,  0,  5,  5,  0,-20,-40],
+    [-50,-40,-30,-30,-30,-30,-40,-50]
+];
+
+const BishopPST = [
+    [-20,-10,-10,-10,-10,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5, 10, 10,  5,  0,-10],
+    [-10,  5,  5, 10, 10,  5,  5,-10],
+    [-10,  0, 10, 10, 10, 10,  0,-10],
+    [-10, 10, 10, 10, 10, 10, 10,-10],
+    [-10,  5,  0,  0,  0,  0,  5,-10],
+    [-20,-10,-10,-10,-10,-10,-10,-20]
+];
+
+const RookPST = [
+    [0,  0,  0,  0,  0,  0,  0,  0],
+    [5, 10, 10, 10, 10, 10, 10,  5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [0,  0,  0,  5,  5,  0,  0,  0]
+];
+
+const QueenPST = [
+    [-20,-10,-10, -5, -5,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5,  5,  5,  5,  0,-10],
+    [-5,  0,  5,  5,  5,  5,  0, -5],
+    [0,  0,  5,  5,  5,  5,  0, -5],
+    [-10,  5,  5,  5,  5,  5,  0,-10],
+    [-10,  0,  5,  0,  0,  5,  0,-10],
+    [-20,-10,-10, -5, -5,-10,-10,-20]
+];
+
+const KingPST_Middle = [
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-20,-30,-30,-40,-40,-30,-30,-20],
+    [-10,-20,-20,-20,-20,-20,-20,-10],
+    [20, 20,  0,  0,  0,  0, 20, 20],
+    [20, 30, 10,  0,  0, 10, 30, 20]
+];
+
+// Heuristic Evaluation function for chess state
+function evaluateBoard(tempGame) {
+    const board = tempGame.board();
+    let totalScore = 0;
+    
+    // Pieces scoring baseline
+    const PIECE_VALS = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+    for (let r = 0; r < 8; r++) {
+        for (let f = 0; f < 8; f++) {
+            const piece = board[r][f];
+            if (piece) {
+                let score = PIECE_VALS[piece.type];
+                
+                // Add positional matrix values
+                // White piece uses flipped rank to compute index correctly
+                const rowIdx = piece.color === 'w' ? (7 - r) : r;
+                const colIdx = f;
+
+                if (piece.type === 'p') score += PawnPST[rowIdx][colIdx];
+                else if (piece.type === 'n') score += KnightPST[rowIdx][colIdx];
+                else if (piece.type === 'b') score += BishopPST[rowIdx][colIdx];
+                else if (piece.type === 'r') score += RookPST[rowIdx][colIdx];
+                else if (piece.type === 'q') score += QueenPST[rowIdx][colIdx];
+                else if (piece.type === 'k') score += KingPST_Middle[rowIdx][colIdx];
+
+                if (piece.color === 'b') {
+                    // Bot plays Black
+                    totalScore += score;
+                } else {
+                    totalScore -= score;
+                }
+            }
+        }
+    }
+    return totalScore;
+}
+
+// Alpha-Beta Minimax search implementation
+function minimax(tempGame, depth, alpha, beta, isMaximizing) {
+    if (depth === 0 || tempGame.game_over()) {
+        return evaluateBoard(tempGame);
+    }
+
+    const moves = tempGame.moves();
+    
+    // Move ordering optimization: sort captures first for faster pruning
+    moves.sort((a, b) => {
+        const aCap = a.includes('x') ? 1 : 0;
+        const bCap = b.includes('x') ? 1 : 0;
+        return bCap - aCap;
+    });
+
+    if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            tempGame.move(moves[i]);
+            const evaluation = minimax(tempGame, depth - 1, alpha, beta, false);
+            tempGame.undo();
+            maxEval = Math.max(maxEval, evaluation);
+            alpha = Math.max(alpha, evaluation);
+            if (beta <= alpha) break; // Beta cut-off
+        }
+        return maxEval;
+    } else {
+        let minEval = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            tempGame.move(moves[i]);
+            const evaluation = minimax(tempGame, depth - 1, alpha, beta, true);
+            tempGame.undo();
+            minEval = Math.min(minEval, evaluation);
+            beta = Math.min(beta, evaluation);
+            if (beta <= alpha) break; // Alpha cut-off
+        }
+        return minEval;
+    }
+}
+
+function makeBotMove() {
+    if (!gameInProgress) return;
+    const moves = game.moves();
+    if (moves.length === 0) return;
+
+    let selectedMove = null;
+
+    if (activeBot.difficulty === 'easy') {
+        // MARTIN: Easy bot (Rating 100)
+        // 75% chance of totally random move, 25% chance of picking a capture if available
+        const captures = moves.filter(m => m.includes('x'));
+        if (captures.length > 0 && Math.random() < 0.25) {
+            selectedMove = captures[Math.floor(Math.random() * captures.length)];
+        } else {
+            selectedMove = moves[Math.floor(Math.random() * moves.length)];
+        }
+    } 
+    else if (activeBot.difficulty === 'medium') {
+        // ELARA: Medium bot (Rating 500)
+        // Search depth 2
+        let bestEval = -Infinity;
+        let bestMoves = [];
+        
+        for (let i = 0; i < moves.length; i++) {
+            game.move(moves[i]);
+            const evaluation = minimax(game, 1, -Infinity, Infinity, false);
+            game.undo();
+            
+            if (evaluation > bestEval) {
+                bestEval = evaluation;
+                bestMoves = [moves[i]];
+            } else if (evaluation === bestEval) {
+                bestMoves.push(moves[i]);
+            }
+        }
+        selectedMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    } 
+    else if (activeBot.difficulty === 'hard') {
+        // MAGNUS BOT: Hard bot (Rating 1000)
+        // Search depth 3 with alpha-beta pruning
+        let bestEval = -Infinity;
+        let bestMoves = [];
+        
+        for (let i = 0; i < moves.length; i++) {
+            game.move(moves[i]);
+            const evaluation = minimax(game, 2, -Infinity, Infinity, false);
+            game.undo();
+            
+            if (evaluation > bestEval) {
+                bestEval = evaluation;
+                bestMoves = [moves[i]];
+            } else if (evaluation === bestEval) {
+                bestMoves.push(moves[i]);
+            }
+        }
+        selectedMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
+
+    if (selectedMove) {
+        const prevCapturedCount = countCapturedPieces(game);
+        game.move(selectedMove);
+        
+        // Toggle Active timers
+        activeClock = game.turn();
+        lastTickTime = Date.now();
+
+        const nextCapturedCount = countCapturedPieces(game);
+        
+        // Render captured lists
+        updateCapturedList();
+
+        if (game.in_check()) {
+            ChessAudio.playCheck();
+        } else if (nextCapturedCount > prevCapturedCount) {
+            ChessAudio.playCapture();
+        } else {
+            ChessAudio.playMove();
+        }
+
+        updateMoveHistory();
+        BoardRenderer.render();
+        checkGameEnd();
+
+        DOM.userPanel.classList.add('active-turn');
+        DOM.opponentPanel.classList.remove('active-turn');
+    }
+}
+
+// --- 9. CLOCK TIMERS AND GAME RUNNERS ---
+
+function initClock() {
+    clearInterval(clockInterval);
+    
+    whiteTimeSec = timeControlMinutes * 60;
+    blackTimeSec = timeControlMinutes * 60;
+
+    renderTime(DOM.userTimer, whiteTimeSec);
+    renderTime(DOM.opponentTimer, blackTimeSec);
+
+    DOM.userTimer.classList.remove('low-time');
+    DOM.opponentTimer.classList.remove('low-time');
+}
+
+function startClockLoop() {
+    lastTickTime = Date.now();
+    clockInterval = setInterval(() => {
+        if (!gameInProgress) return;
+        
+        const now = Date.now();
+        const delta = (now - lastTickTime) / 1000;
+        lastTickTime = now;
+
+        if (activeClock === 'w') {
+            whiteTimeSec = Math.max(0, whiteTimeSec - delta);
+            renderTime(DOM.userTimer, whiteTimeSec);
+            if (whiteTimeSec <= 20) {
+                DOM.userTimer.classList.add('low-time');
+            }
+            if (whiteTimeSec === 0) {
+                triggerTimeoutLoss('w');
+            }
+        } else if (activeClock === 'b') {
+            blackTimeSec = Math.max(0, blackTimeSec - delta);
+            renderTime(DOM.opponentTimer, blackTimeSec);
+            if (blackTimeSec <= 20) {
+                DOM.opponentTimer.classList.add('low-time');
+            }
+            if (blackTimeSec === 0) {
+                triggerTimeoutLoss('b');
+            }
+        }
+    }, 100); // 100ms ticks allows millisecond precision rendering below 20s
+}
+
+function renderTime(element, totalSecs) {
+    if (totalSecs <= 0) {
+        element.textContent = "00:00.0";
+        return;
+    }
+
+    const mins = Math.floor(totalSecs / 60);
+    const secs = Math.floor(totalSecs % 60);
+    
+    // If time is below 20 seconds, show tenths of seconds
+    if (totalSecs < 20) {
+        const tenths = Math.floor((totalSecs % 1) * 10);
+        element.textContent = `${secs.toString().padStart(2, '0')}.${tenths}`;
+    } else {
+        element.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
+function triggerTimeoutLoss(color) {
+    clearInterval(clockInterval);
+    gameInProgress = false;
+    
+    let result = '';
+    let reason = '';
+    
+    if (color === 'w') {
+        result = 'loss';
+        reason = 'Lost on time';
+        userStats.losses++;
+    } else {
+        result = 'win';
+        reason = 'Won on time';
+        userStats.wins++;
+    }
+    userStats.played++;
+    
+    const eloDetails = ELO.calculateChange(activeBot.rating, result === 'win' ? 1 : 0);
+    ELO.saveRating(eloDetails.new);
+    ELO.saveStats();
+
+    showGameOverModal(result, reason, eloDetails);
+}
+
+// --- 10. GAME END AND SCORE EVALUATION ---
+function checkGameEnd() {
+    if (game.game_over()) {
+        clearInterval(clockInterval);
+        gameInProgress = false;
+        
+        let score = 0.5; // Draw default
+        let result = 'draw';
+        let reason = '';
+
+        if (game.in_checkmate()) {
+            const loser = game.turn();
+            if (loser === playerColor) {
+                result = 'loss';
+                score = 0;
+                reason = 'Defeated by Checkmate';
+                userStats.losses++;
+            } else {
+                result = 'win';
+                score = 1;
+                reason = 'Victory by Checkmate!';
+                userStats.wins++;
+            }
+        } else if (game.in_stalemate()) {
+            reason = 'Stalemate';
+            userStats.draws++;
+        } else if (game.in_threefold_repetition()) {
+            reason = 'Draw by Repetition';
+            userStats.draws++;
+        } else if (game.insufficient_material()) {
+            reason = 'Draw by Insufficient Material';
+            userStats.draws++;
+        } else if (game.in_draw()) {
+            reason = 'Draw agreed';
+            userStats.draws++;
+        }
+        
+        userStats.played++;
+        
+        const eloDetails = ELO.calculateChange(activeBot.rating, score);
+        ELO.saveRating(eloDetails.new);
+        ELO.saveStats();
+
+        showGameOverModal(result, reason, eloDetails);
+        return true;
+    }
+    return false;
+}
+
+function showGameOverModal(result, reason, eloDetails) {
+    ChessAudio.playGameOver(result);
+    
+    // Set banner states
+    DOM.gameOverTitle.textContent = result === 'win' ? 'Victory!' : result === 'loss' ? 'Defeat' : 'Draw';
+    DOM.gameOverReason.textContent = reason;
+    
+    DOM.gameOverBanner.className = 'gameover-banner';
+    const bannerIcon = DOM.gameOverBanner.querySelector('i');
+    if (result === 'win') {
+        DOM.gameOverBanner.classList.add('victory');
+        bannerIcon.className = 'fa-solid fa-award';
+    } else if (result === 'loss') {
+        DOM.gameOverBanner.classList.add('defeat');
+        bannerIcon.className = 'fa-solid fa-skull-crossbones';
+    } else {
+        DOM.gameOverBanner.classList.add('draw');
+        bannerIcon.className = 'fa-solid fa-handshake';
+    }
+
+    // Set rating diffs
+    DOM.oldRating.textContent = eloDetails.old;
+    DOM.newRating.textContent = eloDetails.new;
+    
+    // Format change indicator
+    const diff = eloDetails.diff;
+    if (diff > 0) {
+        DOM.changeVal.className = 'rating-box-change positive';
+        DOM.changeVal.textContent = `+${diff}`;
+        DOM.changeArrow.className = 'fa-solid fa-circle-up';
+        DOM.changeArrow.style.color = 'var(--color-brand)';
+    } else if (diff < 0) {
+        DOM.changeVal.className = 'rating-box-change negative';
+        DOM.changeVal.textContent = `${diff}`;
+        DOM.changeArrow.className = 'fa-solid fa-circle-down';
+        DOM.changeArrow.style.color = '#ff6b6b';
+    } else {
+        DOM.changeVal.className = 'rating-box-change neutral';
+        DOM.changeVal.textContent = '0';
+        DOM.changeArrow.className = 'fa-solid fa-right-long';
+        DOM.changeArrow.style.color = 'var(--color-text-muted)';
+    }
+
+    DOM.gameOverBotName.textContent = activeBot.name;
+    DOM.gameOverBotRating.textContent = activeBot.rating;
+
+    DOM.resignBtn.disabled = true;
+    DOM.drawBtn.disabled = true;
+    DOM.startGameBtn.disabled = false;
+    DOM.gameStatusText.textContent = `Game Over. ${reason}.`;
+
+    DOM.gameOverOverlay.classList.add('active');
+}
+
+// Reset Game / Resignations
+function resignGame() {
+    if (!gameInProgress) return;
+    clearInterval(clockInterval);
+    gameInProgress = false;
+
+    userStats.losses++;
+    userStats.played++;
+
+    const eloDetails = ELO.calculateChange(activeBot.rating, 0);
+    ELO.saveRating(eloDetails.new);
+    ELO.saveStats();
+
+    showGameOverModal('loss', 'Resigned', eloDetails);
+}
+
+function offerDraw() {
+    if (!gameInProgress) return;
+    
+    // Draw logic depends on bot. Easy bots accept draws 60% of the time. Medium 20%. Hard 5%.
+    let accepted = false;
+    const rand = Math.random();
+    if (activeBot.difficulty === 'easy' && rand < 0.6) accepted = true;
+    else if (activeBot.difficulty === 'medium' && rand < 0.2) accepted = true;
+    else if (activeBot.difficulty === 'hard' && rand < 0.05) accepted = true;
+
+    if (accepted) {
+        clearInterval(clockInterval);
+        gameInProgress = false;
+
+        userStats.draws++;
+        userStats.played++;
+
+        const eloDetails = ELO.calculateChange(activeBot.rating, 0.5);
+        ELO.saveRating(eloDetails.new);
+        ELO.saveStats();
+
+        showGameOverModal('draw', 'Draw agreed', eloDetails);
+    } else {
+        DOM.gameStatusText.textContent = `${activeBot.name} declined the draw offer.`;
+        setTimeout(() => {
+            if (gameInProgress) {
+                DOM.gameStatusText.textContent = `Game active vs ${activeBot.name}`;
+            }
+        }, 3000);
+    }
+}
+
+// --- 11. GENERAL HELPERS & UI UPDATERS ---
+function countCapturedPieces(g) {
+    if (!g) return 0;
+    // Difference between standard piece counts and current counts
+    const counts = { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 };
+    let onBoard = { w: { p:0,n:0,b:0,r:0,q:0,k:0 }, b: { p:0,n:0,b:0,r:0,q:0,k:0 } };
+    
+    g.board().forEach(row => {
+        row.forEach(p => {
+            if (p) onBoard[p.color][p.type]++;
+        });
+    });
+
+    let captured = 0;
+    ['w', 'b'].forEach(col => {
+        Object.keys(counts).forEach(type => {
+            captured += (counts[type] - onBoard[col][type]);
+        });
+    });
+    return captured;
+}
+
+// Draw captured pieces in the panel lists
+function updateCapturedList() {
+    DOM.userCaptures.innerHTML = '';
+    DOM.opponentCaptures.innerHTML = '';
+
+    const startingCount = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+    let currentCount = {
+        w: { p: 0, n: 0, b: 0, r: 0, q: 0 },
+        b: { p: 0, n: 0, b: 0, r: 0, q: 0 }
+    };
+
+    // Count remaining pieces
+    game.board().forEach(row => {
+        row.forEach(p => {
+            if (p && p.type !== 'k') {
+                currentCount[p.color][p.type]++;
+            }
+        });
+    });
+
+    // Captured Whites: black player (top or bottom depending on user) got them.
+    // We render them under user profile captures if player is white.
+    // Captured pieces are colored by their actual side.
+    const capturedWhite = [];
+    const capturedBlack = [];
+
+    // Capture score differential calculation
+    let whiteVal = 0;
+    let blackVal = 0;
+    const VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
+    Object.keys(startingCount).forEach(type => {
+        const capW = startingCount[type] - currentCount.w[type];
+        for (let i = 0; i < capW; i++) {
+            capturedWhite.push(type);
+            blackVal += VALUES[type];
+        }
+
+        const capB = startingCount[type] - currentCount.b[type];
+        for (let i = 0; i < capB; i++) {
+            capturedBlack.push(type);
+            whiteVal += VALUES[type];
+        }
+    });
+
+    // Sort captured pieces by value: Q, R, B, N, P
+    const sortOrder = { q: 5, r: 4, b: 3, n: 2, p: 1 };
+    capturedWhite.sort((a,b) => sortOrder[b] - sortOrder[a]);
+    capturedBlack.sort((a,b) => sortOrder[b] - sortOrder[a]);
+
+    // Opponent captures container: shows Black captured pieces (Whites captured them)
+    capturedBlack.forEach(type => {
+        const pSpan = document.createElement('div');
+        pSpan.style.width = '18px';
+        pSpan.style.height = '18px';
+        pSpan.style.display = 'inline-block';
+        pSpan.innerHTML = PIECE_SVGS['b' + type];
+        DOM.opponentCaptures.appendChild(pSpan);
+    });
+
+    // User captures container: shows White captured pieces (Blacks captured them)
+    capturedWhite.forEach(type => {
+        const pSpan = document.createElement('div');
+        pSpan.style.width = '18px';
+        pSpan.style.height = '18px';
+        pSpan.style.display = 'inline-block';
+        pSpan.innerHTML = PIECE_SVGS['w' + type];
+        DOM.userCaptures.appendChild(pSpan);
+    });
+
+    // Score margins
+    if (whiteVal > blackVal) {
+        const diff = document.createElement('span');
+        diff.className = 'captured-score-diff';
+        diff.textContent = `+${whiteVal - blackVal}`;
+        DOM.userCaptures.appendChild(diff);
+    } else if (blackVal > whiteVal) {
+        const diff = document.createElement('span');
+        diff.className = 'captured-score-diff';
+        diff.textContent = `+${blackVal - whiteVal}`;
+        DOM.opponentCaptures.appendChild(diff);
+    }
+}
+
+// Update the PGN move list table in sidebar
+function updateMoveHistory() {
+    DOM.moveHistoryTable.innerHTML = '';
+    const moves = game.history();
+    DOM.moveCount.textContent = `${moves.length} moves`;
+
+    for (let i = 0; i < moves.length; i += 2) {
+        const row = document.createElement('tr');
+        
+        const moveNumCell = document.createElement('td');
+        moveNumCell.className = 'move-num';
+        moveNumCell.textContent = Math.floor(i / 2) + 1;
+        row.appendChild(moveNumCell);
+
+        const whiteMoveCell = document.createElement('td');
+        whiteMoveCell.className = 'move-ply';
+        whiteMoveCell.textContent = moves[i];
+        row.appendChild(whiteMoveCell);
+
+        const blackMoveCell = document.createElement('td');
+        blackMoveCell.className = 'move-ply';
+        blackMoveCell.textContent = moves[i + 1] || '';
+        row.appendChild(blackMoveCell);
+
+        DOM.moveHistoryTable.appendChild(row);
+    }
+
+    // Auto scroll move list to bottom
+    const logContainer = document.getElementById('move-log');
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+// --- 12. TAB AND BUTTON CONTROL HANDLERS ---
+
+// Sidebar Tab selectors
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        // Clear active tabs
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+        // Add active state to clicked
+        btn.classList.add('active');
+        const targetPane = document.getElementById(btn.dataset.tab);
+        targetPane.classList.add('active');
+    });
+});
+
+// Time control picker buttons
+document.querySelectorAll('.time-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        if (gameInProgress) return;
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        timeControlMinutes = parseInt(btn.dataset.time, 10);
+        initClock();
+    });
+});
+
+// Bot card selectors
+document.querySelectorAll('.bot-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+        if (gameInProgress) return;
+        document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        
+        const botKey = card.dataset.bot;
+        activeBot = BOTS[botKey];
+        
+        // Update opponent badge visuals
+        DOM.opponentName.textContent = activeBot.name;
+        DOM.opponentRating.textContent = activeBot.rating;
+    });
+});
+
+// Start Game Play Button
+DOM.startGameBtn.addEventListener('click', startNewGame);
+
+function startNewGame() {
+    // Initialize state
+    game = new Chess();
+    gameInProgress = true;
+    selectedSquare = null;
+    legalMovesForSelected = [];
+    pendingPromotion = null;
+    
+    // Clear captures
+    DOM.userCaptures.innerHTML = '';
+    DOM.opponentCaptures.innerHTML = '';
+
+    // Clock resets
+    initClock();
+    activeClock = 'w'; // White starts
+    startClockLoop();
+
+    // Toggle active panel turn border
+    DOM.userPanel.classList.add('active-turn');
+    DOM.opponentPanel.classList.remove('active-turn');
+
+    // UI Updates
+    DOM.opponentName.textContent = activeBot.name;
+    DOM.opponentRating.textContent = activeBot.rating;
+    DOM.gameStatusText.textContent = `Game active vs ${activeBot.name}`;
+    DOM.moveHistoryTable.innerHTML = '';
+    DOM.moveCount.textContent = '0 moves';
+    
+    // Disable setup toggles, enable action controls
+    DOM.startGameBtn.disabled = true;
+    DOM.resignBtn.disabled = false;
+    DOM.drawBtn.disabled = false;
+
+    // Direct user to PGN log Tab
+    document.querySelector('.tab-btn[data-tab="game-tab"]').click();
+
+    BoardRenderer.render();
+}
+
+// Flip Board layout button
+DOM.flipBoardBtn.addEventListener('click', () => {
+    boardFlipped = !boardFlipped;
+    
+    // Swap coordinate markers vertically/horizontally
+    const verticalCoords = document.getElementById('coords-left');
+    const horizontalCoords = document.getElementById('coords-bottom');
+    
+    if (boardFlipped) {
+        verticalCoords.innerHTML = '<span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>';
+        horizontalCoords.innerHTML = '<span>h</span><span>g</span><span>f</span><span>e</span><span>d</span><span>c</span><span>b</span><span>a</span>';
+    } else {
+        verticalCoords.innerHTML = '<span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>';
+        horizontalCoords.innerHTML = '<span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>';
+    }
+
+    BoardRenderer.render();
+});
+
+// Actions Resign/Draw bindings
+DOM.resignBtn.addEventListener('click', resignGame);
+DOM.drawBtn.addEventListener('click', offerDraw);
+
+// Modal game over close play again button
+DOM.gameOverCloseBtn.addEventListener('click', () => {
+    DOM.gameOverOverlay.classList.remove('active');
+    // Open the play panel
+    document.querySelector('.tab-btn[data-tab="play-tab"]').click();
+});
+
+// Reset stats button
+DOM.resetStatsBtn.addEventListener('click', () => {
+    if (confirm("Are you sure you want to reset all your stats and rating back to 0?")) {
+        ELO.reset();
+        alert("Stats reset complete.");
+    }
+});
+
+// --- 13. INITIALIZATION ---
+window.addEventListener('DOMContentLoaded', () => {
+    // Load Elo ratings & profiles
+    ELO.load();
+    
+    // Set opponent details display matching active state
+    DOM.opponentName.textContent = activeBot.name;
+    DOM.opponentRating.textContent = activeBot.rating;
+    
+    // Initial Board display
+    BoardRenderer.render();
+    initClock();
+});

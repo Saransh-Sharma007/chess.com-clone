@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Chess Online</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Game Area -->
+        <main class="game-area">
+            <!-- Opponent Panel (Top) -->
+            <div class="player-panel opponent-panel" id="opponent-panel">
+                <div class="player-profile">
+                    <div class="avatar bot-avatar">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="player-details">
+                        <span class="player-name" id="opponent-name">Select Bot</span>
+                        <span class="player-rating-badge" id="opponent-rating-badge">--</span>
+                        <div class="captured-pieces" id="opponent-captures">
+                            <!-- Captured white pieces will appear here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="timer-container">
+                    <div class="timer" id="opponent-timer">00:00</div>
+                </div>
+            </div>
+
+            <!-- Chess Board Outer Container (keeps aspect ratio) -->
+            <div class="board-outer-container">
+                <!-- Board Coordinates Left (Files 8-1) -->
+                <div class="board-coords board-coords-vertical" id="coords-left">
+                    <span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+                </div>
+                
+                <div class="board-inner-wrapper">
+                    <!-- The Interactive Chess Board -->
+                    <div class="chess-board" id="chess-board">
+                        <!-- Squares and pieces will be dynamically created by JS -->
+                    </div>
+                </div>
+
+                <!-- Board Coordinates Bottom (Ranks a-h) -->
+                <div class="board-coords board-coords-horizontal" id="coords-bottom">
+                    <span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span>
+                </div>
+            </div>
+
+            <!-- User Panel (Bottom) -->
+            <div class="player-panel user-panel" id="user-panel">
+                <div class="player-profile">
+                    <div class="avatar user-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="player-details">
+                        <span class="player-name" id="user-name">Guest Player</span>
+                        <span class="player-rating-badge" id="user-rating-badge">0</span>
+                        <div class="captured-pieces" id="user-captures">
+                            <!-- Captured black pieces will appear here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="timer-container">
+                    <div class="timer" id="user-timer">00:00</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Panel -->
+        <aside class="sidebar">
+            <!-- Brand / Logo Header -->
+            <header class="logo-header">
+                <div class="logo">
+                    <i class="fa-solid fa-chess-knight"></i>
+                    <h1>Amazing<span>Chess</span></h1>
+                </div>
+            </header>
+
+            <!-- Navigation Tabs -->
+            <nav class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="play-tab">
+                    <i class="fa-solid fa-play"></i> Play
+                </button>
+                <button class="tab-btn" data-tab="game-tab">
+                    <i class="fa-solid fa-scroll"></i> Moves
+                </button>
+                <button class="tab-btn" data-tab="stats-tab">
+                    <i class="fa-solid fa-chart-simple"></i> Stats
+                </button>
+            </nav>
+
+            <!-- Tab Contents -->
+            <div class="sidebar-content">
+                <!-- Play Tab -->
+                <div class="tab-pane active" id="play-tab">
+                    <!-- Step 1: Choose Time Control -->
+                    <section class="config-section">
+                        <h3><i class="fa-solid fa-clock"></i> 1. Choose Time Control</h3>
+                        <div class="time-controls">
+                            <button class="time-btn" data-time="3">
+                                <span class="time-val">3m</span>
+                                <span class="time-label">Blitz</span>
+                            </button>
+                            <button class="time-btn active" data-time="5">
+                                <span class="time-val">5m</span>
+                                <span class="time-label">Blitz</span>
+                            </button>
+                            <button class="time-btn" data-time="10">
+                                <span class="time-val">10m</span>
+                                <span class="time-label">Rapid</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Step 2: Choose Opponent -->
+                    <section class="config-section">
+                        <h3><i class="fa-solid fa-robot"></i> 2. Choose Opponent Bot</h3>
+                        <div class="bot-selectors">
+                            <div class="bot-card active" data-bot="martin" data-rating="100">
+                                <div class="bot-card-icon easy-bot">
+                                    <i class="fa-solid fa-seedling"></i>
+                                </div>
+                                <div class="bot-card-info">
+                                    <span class="bot-name">Martin</span>
+                                    <span class="bot-desc">Easy (Rating 100)</span>
+                                </div>
+                            </div>
+                            <div class="bot-card" data-bot="elara" data-rating="500">
+                                <div class="bot-card-icon medium-bot">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <div class="bot-card-info">
+                                    <span class="bot-name">Elara</span>
+                                    <span class="bot-desc">Medium (Rating 500)</span>
+                                </div>
+                            </div>
+                            <div class="bot-card" data-bot="magnus" data-rating="1000">
+                                <div class="bot-card-icon hard-bot">
+                                    <i class="fa-solid fa-crown"></i>
+                                </div>
+                                <div class="bot-card-info">
+                                    <span class="bot-name">Magnus Bot</span>
+                                    <span class="bot-desc">Hard (Rating 1000)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Play Trigger Button -->
+                    <button class="btn btn-primary" id="start-game-btn">
+                        <i class="fa-solid fa-gamepad"></i> Play Game
+                    </button>
+                </div>
+
+                <!-- Game Info Tab (Active Gameplay Stats & Moves) -->
+                <div class="tab-pane" id="game-tab">
+                    <div class="active-game-details">
+                        <div class="game-status-text" id="game-status-text">
+                            No active game. Choose configuration and click Play.
+                        </div>
+                        
+                        <div class="move-log-wrapper">
+                            <div class="move-log-header">
+                                <span>Move Log</span>
+                                <span id="move-count">0 moves</span>
+                            </div>
+                            <div class="move-log-container" id="move-log">
+                                <table class="move-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>White</th>
+                                            <th>Black</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="move-history-tbody">
+                                        <!-- Moves will be dynamically inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Active Game Action Controls -->
+                        <div class="game-controls">
+                            <button class="btn btn-secondary" id="flip-board-btn" title="Flip Board">
+                                <i class="fa-solid fa-retweet"></i> Flip Board
+                            </button>
+                            <button class="btn btn-danger" id="resign-btn" disabled title="Resign Game">
+                                <i class="fa-solid fa-flag"></i> Resign
+                            </button>
+                            <button class="btn btn-warning" id="draw-btn" disabled title="Claim Draw">
+                                <i class="fa-solid fa-handshake"></i> Offer Draw
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Tab -->
+                <div class="tab-pane" id="stats-tab">
+                    <div class="stats-container">
+                        <div class="stat-card rating-highlight">
+                            <i class="fa-solid fa-trophy"></i>
+                            <span class="stat-value" id="stats-rating">0</span>
+                            <span class="stat-label">Current Rating</span>
+                        </div>
+                        <div class="stat-grid">
+                            <div class="stat-card">
+                                <span class="stat-value" id="stats-played">0</span>
+                                <span class="stat-label">Played</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stats-wins">0</span>
+                                <span class="stat-label">Won</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stats-losses">0</span>
+                                <span class="stat-label">Lost</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stats-draws">0</span>
+                                <span class="stat-label">Drawn</span>
+                            </div>
+                        </div>
+                        <div class="stat-card rating-highlight max-rating-card">
+                            <i class="fa-solid fa-ranking-star"></i>
+                            <span class="stat-value" id="stats-peak">0</span>
+                            <span class="stat-label">Peak Rating</span>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="reset-stats-btn" style="margin-top: 1.5rem; width: 100%;">
+                            <i class="fa-solid fa-trash-can"></i> Reset Stats
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Promotion Selection Modal Overlay -->
+    <div class="modal-overlay" id="promotion-overlay">
+        <div class="modal-content promotion-modal">
+            <h3>Promote Pawn</h3>
+            <p>Select a piece to promote your pawn to:</p>
+            <div class="promotion-choices">
+                <button class="promo-choice-btn" data-piece="q" title="Queen">
+                    <span class="promo-icon"><i class="fa-solid fa-chess-queen"></i></span>
+                    <span class="promo-label">Queen</span>
+                </button>
+                <button class="promo-choice-btn" data-piece="r" title="Rook">
+                    <span class="promo-icon"><i class="fa-solid fa-chess-rook"></i></span>
+                    <span class="promo-label">Rook</span>
+                </button>
+                <button class="promo-choice-btn" data-piece="b" title="Bishop">
+                    <span class="promo-icon"><i class="fa-solid fa-chess-bishop"></i></span>
+                    <span class="promo-label">Bishop</span>
+                </button>
+                <button class="promo-choice-btn" data-piece="n" title="Knight">
+                    <span class="promo-icon"><i class="fa-solid fa-chess-knight"></i></span>
+                    <span class="promo-label">Knight</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal Overlay -->
+    <div class="modal-overlay" id="gameover-overlay">
+        <div class="modal-content gameover-modal">
+            <div class="gameover-banner" id="gameover-banner">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h2 id="gameover-title">Victory!</h2>
+            <p class="gameover-reason" id="gameover-reason">Checkmate</p>
+            
+            <!-- Rating Change Section -->
+            <div class="rating-change-container">
+                <div class="rating-box">
+                    <span class="rating-box-label">Rating</span>
+                    <span class="rating-box-val" id="gameover-old-rating">0</span>
+                </div>
+                <div class="rating-change-arrow">
+                    <i class="fa-solid fa-right-long" id="gameover-change-arrow"></i>
+                </div>
+                <div class="rating-box">
+                    <span class="rating-box-label">New Rating</span>
+                    <span class="rating-box-val" id="gameover-new-rating">0</span>
+                    <span class="rating-box-change" id="gameover-change-val">+16</span>
+                </div>
+            </div>
+
+            <!-- Bot details played -->
+            <p class="gameover-vs">vs <span id="gameover-bot-name">Martin</span> (Rating <span id="gameover-bot-rating">100</span>)</p>
+
+            <button class="btn btn-primary" id="gameover-close-btn">
+                <i class="fa-solid fa-rotate-left"></i> Play Again
+            </button>
+        </div>
+    </div>
+
+    <!-- External Chess Logic Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <!-- Core Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
